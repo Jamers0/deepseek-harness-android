@@ -1,0 +1,56 @@
+# DeepSeek Harness — Android port
+
+# Dependencies / package managers
+node_modules/
+.pnpm-store/
+.pnpm/
+.npm/
+.yarn/
+
+# Build / cache
+dist/
+lib/**/*.tsbuildinfo
+*.tsbuildinfo
+.tmp/
+.cache/
+.output/
+
+# CMake build cache (keep only the compiled koffi.node)
+patches/koffi@3.1.1/build/**/CMakeCache.txt
+patches/koffi@3.1.1/build/**/CMakeFiles/
+patches/koffi@3.1.1/build/**/*.o
+patches/koffi@3.1.1/build/**/*.a
+patches/koffi@3.1.1/build/**/*.bin
+patches/koffi@3.1.1/build/**/Makefile
+patches/koffi@3.1.1/build/**/cmake_install.cmake
+patches/koffi@3.1.1/build/**/compile_commands.json
+patches/koffi@3.1.1/build/**/Output/
+patches/koffi@3.1.1/build/**/koffi_unity.cpp
+patches/koffi@3.1.1/build/**/trampolines/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# DeepSeek Harness runtime
+.dsh/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# Secrets / credentials / personal config
+.env
+.env.*
+secrets*
+*.token
+*.key
+*.pem
+id_rsa*
+!patches/koffi@3.1.1/**  # keep patched Koffi source + android_arm64 build
+
+# NOTE: keep the committed Android native artifacts:
+#   prebuilds/pty.node
+#   patches/koffi@3.1.1/build/koffi/android_arm64/koffi.node
