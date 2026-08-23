@@ -105,6 +105,13 @@ Server: **http://127.0.0.1:3080**
 
 ---
 
+## Screenshots
+
+Running on Android (Termux) — `dsh web` at `http://127.0.0.1:3080`:
+
+![DeepSeek Harness web UI on Android](screenshots/Screenshot_20260823-034701.png)
+![Directory picker / workspace on Android](screenshots/Screenshot_20260823-034726.png)
+
 ## Repository layout (this port)
 
 ```
