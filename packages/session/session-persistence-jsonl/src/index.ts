@@ -9,7 +9,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { readdirSync } from 'node:fs'
-import { open, mkdir, readFile, readdir, realpath, link, rm, stat, truncate } from 'node:fs/promises'
+import { open, mkdir, readFile, readdir, realpath, rename, rm, stat, truncate } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { performance } from 'node:perf_hooks'
 import { scheduler } from 'node:timers/promises'
@@ -546,7 +546,7 @@ export class JsonlSessionPersistence extends SessionPersistence implements Persi
     // concurrently cannot clobber each other. rename() would silently overwrite.
     let linked = false
     try {
-      await link(tmp, finalPath)
+      await rename(tmp, finalPath)
       linked = true
     } finally {
       // Remove an unpublished temp on failure. After publication, defer cleanup
