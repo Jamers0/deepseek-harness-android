@@ -1,10 +1,13 @@
-export default function Header() {
+type Props = {
+  title: string
+  subtitle: string
+}
+
+export default function Header({ title, subtitle }: Props) {
   return (
     <header className="header">
-      <h1>KERBERUS Runtime Dashboard</h1>
-      <div className="subtitle">
-        «DeepSeek Harness + Ubuntu Runtime + Android Host»
-      </div>
+      <h1>{title}</h1>
+      <span className="subtitle">{subtitle}</span>
     </header>
-  );
+  )
 }

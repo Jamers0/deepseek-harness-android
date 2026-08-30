@@ -1,16 +1,14 @@
-import SectionTitle from "@/components/SectionTitle";
+import SectionTitle from '../components/SectionTitle'
 
 export default function Projects() {
   return (
     <div className="page">
       <SectionTitle>Projetos</SectionTitle>
-      <div className="card">
-        <p className="placeholder">
-          Gestão de projetos Git do ecossistema Kerberus. Esta secção será
-          ligada à API Kerberus (porta 3000) na Fase 2 para listar, criar e
-          clonar repositórios diretamente do Dashboard.
-        </p>
-      </div>
+      <p>
+        Repositório compartilhado: <code>deepseek-harness-android</code>.<br />
+        Todo o desenvolvimento Kerberus vive isolado em <code>kerberus/</code>,
+        sem tocar no DeepSeek Harness original.
+      </p>
     </div>
-  );
+  )
 }

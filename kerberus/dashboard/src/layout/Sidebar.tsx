@@ -1,40 +1,30 @@
-import { NavLink } from "react-router-dom";
-
-interface NavEntry {
-  to: string;
-  label: string;
-  icon: string;
+type Props = {
+  page: string
+  setPage: (p: string) => void
 }
 
-const NAV: NavEntry[] = [
-  { to: "/dashboard", label: "Dashboard", icon: "▦" },
-  { to: "/projects", label: "Novo Chat", icon: "✎" },
-  { to: "/projects", label: "Projetos", icon: "▤" },
-  { to: "/agents", label: "Agentes", icon: "⚇" },
-  { to: "/runtime", label: "Terminal", icon: "▷" },
-  { to: "/runtime", label: "Runtime", icon: "⚙" },
-  { to: "/settings", label: "Configurações", icon: "⚒" },
-];
+const items: { id: string; label: string; icon: string }[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: '▣' },
+  { id: 'projects', label: 'Projetos', icon: '▤' },
+  { id: 'agents', label: 'Agentes', icon: '◉' },
+  { id: 'runtime', label: 'Runtime', icon: '⚙' },
+  { id: 'settings', label: 'Configurações', icon: '⚒' },
+]
 
-export default function Sidebar() {
+export default function Sidebar({ page, setPage }: Props) {
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">
-        <span className="dot" />
-        KERBERUS
-      </div>
-      <nav>
-        {NAV.map((item, i) => (
-          <NavLink
-            key={`${item.to}-${i}`}
-            to={item.to}
-            className={({ isActive }) => `nav-item${isActive ? " active" : ""}`}
-          >
-            <span className="icon">{item.icon}</span>
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+      <div className="sidebar-logo">KERBERUS</div>
+      {items.map((it) => (
+        <div
+          key={it.id}
+          className={`nav-item ${page === it.id ? 'active' : ''}`}
+          onClick={() => setPage(it.id)}
+        >
+          <span>{it.icon}</span>
+          <span>{it.label}</span>
+        </div>
+      ))}
     </aside>
-  );
+  )
 }

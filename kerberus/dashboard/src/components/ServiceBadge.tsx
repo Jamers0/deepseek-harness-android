@@ -1,22 +1,14 @@
-import type { ServiceStatus } from "@/lib/services";
-
-interface ServiceBadgeProps {
-  status: ServiceStatus;
-  label?: string;
+type Props = {
+  label?: string
+  status: 'online' | 'offline' | 'unknown'
+  children?: React.ReactNode
 }
 
-const MAP: Record<ServiceStatus, { cls: string; text: string }> = {
-  online: { cls: "online", text: "Online" },
-  offline: { cls: "offline", text: "Offline" },
-  warning: { cls: "warning", text: "Pendente" },
-};
-
-export default function ServiceBadge({ status, label }: ServiceBadgeProps) {
-  const m = MAP[status];
+export default function ServiceBadge({ label, status, children }: Props) {
   return (
-    <span className={`badge ${m.cls}`}>
-      <span className="led" />
-      {label ?? m.text}
+    <span className={`badge ${status}`}>
+      <span className="dot" />
+      {children ?? label}
     </span>
-  );
+  )
 }

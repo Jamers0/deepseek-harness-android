@@ -1,21 +1,29 @@
-import type { ReactNode } from "react";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
-import TopBar from "./TopBar";
+import Sidebar from './Sidebar'
+import Header from './Header'
 
-interface LayoutProps {
-  children: ReactNode;
+type Props = {
+  page: string
+  setPage: (p: string) => void
+  children: React.ReactNode
 }
 
-export default function Layout({ children }: LayoutProps) {
+const titles: Record<string, { title: string; subtitle: string }> = {
+  dashboard: { title: 'KERBERUS Runtime Dashboard', subtitle: 'DeepSeek Harness + Ubuntu Runtime + Android Host' },
+  projects: { title: 'Projetos', subtitle: 'Repositórios e workspaces Kerberus' },
+  agents: { title: 'Agentes', subtitle: 'Agentes do Harness' },
+  runtime: { title: 'Runtime', subtitle: 'Estado do runtime Ubuntu + Termux' },
+  settings: { title: 'Configurações', subtitle: 'Preferências do dashboard' },
+}
+
+export default function Layout({ page, setPage, children }: Props) {
+  const head = titles[page] ?? titles.dashboard
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar page={page} setPage={setPage} />
       <div className="main">
-        <Header />
-        <TopBar />
-        <main className="content">{children}</main>
+        <Header title={head.title} subtitle={head.subtitle} />
+        <div className="content">{children}</div>
       </div>
     </div>
-  );
+  )
 }

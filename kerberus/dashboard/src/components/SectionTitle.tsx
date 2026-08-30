@@ -1,7 +1,7 @@
-interface SectionTitleProps {
-  children: string;
+type Props = {
+  children: React.ReactNode
 }
 
-export default function SectionTitle({ children }: SectionTitleProps) {
-  return <h2 className="section-title">{children}</h2>;
+export default function SectionTitle({ children }: Props) {
+  return <div className="section-title">{children}</div>
 }

@@ -1,18 +1,13 @@
-interface IconButtonProps {
-  icon: string;
-  label?: string;
-  onClick?: () => void;
+type Props = {
+  title?: string
+  onClick?: () => void
+  children?: React.ReactNode
 }
 
-export default function IconButton({ icon, label, onClick }: IconButtonProps) {
+export default function IconButton({ title, onClick, children }: Props) {
   return (
-    <button
-      className="icon-btn"
-      onClick={onClick}
-      aria-label={label ?? "ação"}
-      title={label}
-    >
-      {icon}
+    <button className="icon-btn" title={title} onClick={onClick}>
+      {children}
     </button>
-  );
+  )
 }
