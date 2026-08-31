@@ -7,6 +7,8 @@ import ResourcesTable from './components/ResourcesTable'
 import NavigateLinks from './components/NavigateLinks'
 import ToolsGrid from './components/ToolsGrid'
 import SupportFooter from './components/SupportFooter'
+import HardwareCard from './components/HardwareCard'
+import TerminalPopup from './components/TerminalPopup'
 import { useServices } from './hooks/useServices'
 import { useRoute } from './lib/router'
 import { useTheme } from './lib/theme'
@@ -16,6 +18,7 @@ import {
 
 export default function App() {
   const [drawer, setDrawer] = useState(false)
+  const [terminal, setTerminal] = useState(false)
   const [route, navigate] = useRoute()
   const { theme, toggle } = useTheme()
   const { data } = useServices()
@@ -28,6 +31,7 @@ export default function App() {
       <>
         <Hero onOpen={(r) => go(r)} />
         <QuickAccess services={data} onOpen={(r) => go(r)} />
+        <HardwareCard />
         <ResourcesTable onOpen={(r) => go(r)} />
         <NavigateLinks onOpen={(r) => go(r)} />
         <ToolsGrid onOpen={(r) => go(r)} />
@@ -45,9 +49,15 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <TopNav onMenu={() => setDrawer(true)} theme={theme} onToggleTheme={toggle} />
+      <TopNav
+        onMenu={() => setDrawer(true)}
+        theme={theme}
+        onToggleTheme={toggle}
+        onTerminal={() => setTerminal(true)}
+      />
       <Drawer open={drawer} onClose={() => setDrawer(false)} route={route} setRoute={go} />
       <main className="page">{body}</main>
+      <TerminalPopup open={terminal} onClose={() => setTerminal(false)} />
     </div>
   )
 }

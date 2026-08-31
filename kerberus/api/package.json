@@ -1,0 +1,15 @@
+{
+  "name": "kerberus-api",
+  "version": "1.0.0",
+  "description": "Kerberus API — backend de orquestração de serviços do runtime (porta 3000)",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

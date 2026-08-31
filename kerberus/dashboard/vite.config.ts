@@ -6,9 +6,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 3001,
+    allowedHosts: ['dashboard.kerberus.uk', 'term.kerberus.uk', '100.109.109.51', 'localhost'],
   },
   preview: {
     host: '0.0.0.0',
     port: 3001,
+    allowedHosts: ['dashboard.kerberus.uk', 'term.kerberus.uk', '100.109.109.51', 'localhost'],
   },
 })
