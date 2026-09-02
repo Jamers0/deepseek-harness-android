@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { HOST } from '../lib/services'
 
 export type HardwareData = {
   device?: string
@@ -32,7 +31,7 @@ export function useHardware() {
     const controller = new AbortController()
     const t = setTimeout(() => controller.abort(), 3000)
     try {
-      const res = await fetch(`http://${HOST}:3000/hardware`, {
+      const res = await fetch('/api/v1/hardware', {
         signal: controller.signal,
         cache: 'no-store',
       })

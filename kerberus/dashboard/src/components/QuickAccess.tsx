@@ -1,4 +1,4 @@
-import { HOST, type Service } from '../lib/services'
+import { type Service } from '../lib/services'
 import DeepSeekLogo from './DeepSeekLogo'
 
 type Props = {
@@ -21,7 +21,6 @@ export default function QuickAccess({ services, onOpen }: Props) {
       label: s.title,
       icon: s.id === 'harness' ? <DeepSeekLogo size={24} /> : s.icon,
       color: COLORS[s.id] ?? '#3b82f6',
-      href: `http://${HOST}:${s.port}/`,
       route: s.id === 'dashboard' ? '/' : s.id === 'harness' ? '/harness' : s.id === 'api' ? '/api' : '/codeserver',
     })),
     { id: 'more', label: 'Mais serviços', icon: '›', color: '#6b7891', more: true, route: '/ferramentas' },
@@ -34,7 +33,7 @@ export default function QuickAccess({ services, onOpen }: Props) {
       </div>
       <div className="qa-row">
         {items.map((it: any) => {
-          const isLink = !!it.href && !it.create && !it.more
+          const isLink = false
           return (
             <a
               key={it.id}

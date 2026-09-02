@@ -1,27 +1,20 @@
 import { useCallback, useEffect, useState } from 'react'
-import { services, HOST, type Service, type ServiceStatus } from '../lib/services'
+import { services, type Service, type ServiceStatus } from '../lib/services'
 
-/**
- * Hook de status de serviços — V1 com ping ao vivo.
- *
- * Como a dashboard e os serviços rodam no MESMO host (S21, via Tailscale),
- * fazemos um fetch cross-origin (no-cors) em http://<host>:<porta>.
- * - Se a promise resolve (servidor respondeu, mesmo opaque), a porta está ABERTA → online.
- * - Se rejeita (connection refused / timeout), a porta está fechada → offline.
- *
- * O dashboard (:3001) sempre responde; os outros são checados de verdade.
- */
-async function pingPort(port: string): Promise<ServiceStatus> {
-  const url = `http://${HOST}:${port}/`
+async function loadServices(): Promise<Service[]> {
   const controller = new AbortController()
-  const t = setTimeout(() => controller.abort(), 2500)
+  const timeout = setTimeout(() => controller.abort(), 3000)
   try {
-    await fetch(url, { mode: 'no-cors', signal: controller.signal, cache: 'no-store' })
-    return 'online'
-  } catch {
-    return 'offline'
+    const res = await fetch('/api/v1/services', { signal: controller.signal, cache: 'no-store' })
+    if (!res.ok) throw new Error(`API ${res.status}`)
+    const json = await res.json() as { services?: Array<{ id: string; status: ServiceStatus; port: number }> }
+    const live = new Map((json.services || []).map((s) => [s.id, s]))
+    return services.map((service) => {
+      const result = live.get(service.id)
+      return result ? { ...service, port: String(result.port), status: result.status } : service
+    })
   } finally {
-    clearTimeout(t)
+    clearTimeout(timeout)
   }
 }
 
@@ -31,11 +24,8 @@ export function useServices(): { data: Service[]; refresh: () => void; loading: 
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    const results = await Promise.all(
-      services.map(async (s) => ({ ...s, status: await pingPort(s.port) }))
-    )
-    setData(results)
-    setLoading(false)
+    try { setData(await loadServices()) } catch { setData(services.map((s) => ({ ...s, status: 'offline' }))) }
+    finally { setLoading(false) }
   }, [])
 
   useEffect(() => {

@@ -25,7 +25,7 @@ export function HarnessPage({ go }: { go: (r: string) => void }) {
           <div className="k">Runtime</div><div className="v">Termux · Node 24</div>
           <div className="k">Framework</div><div className="v">Cordis (plugin-based)</div>
         </div>
-        <a className="ext-link" href={`http://${HOST}:3080/`} target="_blank" rel="noreferrer">Abrir Harness ↗</a>
+        <a className="ext-link" href="/harness" target="_blank" rel="noreferrer">Abrir Harness ↗</a>
       </div>
 
       <h2 className="section-title" style={{ marginTop: 28, marginBottom: 14 }}>Recursos</h2>
@@ -58,8 +58,8 @@ export function ApiPage({ go }: { go: (r: string) => void }) {
           <div className="k">Swagger</div><div className="v">/docs</div>
           <div className="k">Auth</div><div className="v">Bearer (configurável)</div>
         </div>
-        <a className="ext-link" href={`http://${HOST}:3000/`} target="_blank" rel="noreferrer">Abrir API ↗</a>
-        <a className="ext-link" href={`http://${HOST}:3000/docs`} target="_blank" rel="noreferrer">Swagger UI ↗</a>
+        <a className="ext-link" href="/api/v1/status" target="_blank" rel="noreferrer">Abrir API ↗</a>
+        <a className="ext-link" href="/api/docs" target="_blank" rel="noreferrer">Documentação da API ↗</a>
       </div>
 
       <h2 className="section-title" style={{ marginTop: 28, marginBottom: 14 }}>Endpoints</h2>
@@ -153,12 +153,12 @@ export function CodeServerPage({ go }: { go: (r: string) => void }) {
         <h3>Acesso</h3>
         <div style={{ margin: '10px 0' }}>{s && <StatusPill status={s.status} />}</div>
         <div className="kv">
-          <div className="k">URL</div><div className="v">{`http://${HOST}:8080/`}</div>
+          <div className="k">URL</div><div className="v">/vscode</div>
           <div className="k">Auth</div><div className="v">password</div>
-          <div className="k">Senha</div><div className="v">kerberus8080</div>
+          <div className="k">Senha</div><div className="v">configurada no runtime</div>
           <div className="k">Runtime</div><div className="v">proot Ubuntu (glibc)</div>
         </div>
-        <a className="ext-link" href={`http://${HOST}:8080/`} target="_blank" rel="noreferrer">Abrir VS Code ↗</a>
+        <a className="ext-link" href="/vscode" target="_blank" rel="noreferrer">Abrir VS Code ↗</a>
       </div>
 
       <h2 className="section-title" style={{ marginTop: 28, marginBottom: 14 }}>Dicas</h2>

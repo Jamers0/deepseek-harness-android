@@ -7,6 +7,12 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (() => {
+        const saved = localStorage.getItem('kerberus-theme')
+        document.documentElement.setAttribute('data-theme', saved === 'light' ? 'light' : 'dark')
+      })()
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

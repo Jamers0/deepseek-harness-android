@@ -1,6 +1,4 @@
 import { useEffect } from 'react'
-import { HOST } from '../lib/services'
-
 /**
  * Terminal pop-up: abre um modal com o terminal real do host.
  *
@@ -27,7 +25,7 @@ export default function TerminalPopup({
 
   if (!open) return null
 
-  const codeServerUrl = `http://${HOST}:8080/`
+  const codeServerUrl = '/vscode/'
 
   return (
     <div className="term-overlay" onClick={onClose}>

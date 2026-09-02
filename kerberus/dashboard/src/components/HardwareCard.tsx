@@ -35,7 +35,7 @@ export default function HardwareCard() {
         <div className="hw-card hw-muted">
           <p>S21 · SM-G991U1 · Android 15</p>
           <p style={{ fontSize: 12.5, color: 'var(--text-faint)' }}>
-            A Kerberus API (:3000) não está respondendo. Suba o backend para ver faturamento de hardware ao vivo.
+            A Kerberus API não está respondendo. Suba o backend para ver métricas de hardware ao vivo.
           </p>
         </div>
       </section>

@@ -1,4 +1,3 @@
-import { HOST } from '../lib/services'
 import DeepSeekLogo from './DeepSeekLogo'
 
 type HeroCard = {
@@ -17,7 +16,7 @@ const cards: HeroCard[] = [
     title: 'DeepSeek Harness',
     desc: 'Agente de desenvolvimento autônomo rodando no Termux do S21. Plugins Cordis, sessões e execução de tarefas.',
     cta: 'Abrir Harness',
-    ctaHref: `http://${HOST}:3080/`,
+
     more: 'Saiba mais',
     moreRoute: '/harness',
     art: 'default',
@@ -27,7 +26,7 @@ const cards: HeroCard[] = [
     title: 'VS Code Server',
     desc: 'Editor completo no proot Ubuntu do S21. Edite o dashboard e os projetos Kerberus de qualquer lugar.',
     cta: 'Acessar IDE',
-    ctaHref: `http://${HOST}:8080/`,
+
     more: 'Documentação',
     moreRoute: '/codeserver',
     art: 'inner',
@@ -37,7 +36,7 @@ const cards: HeroCard[] = [
     title: 'Kerberus API',
     desc: 'API de orquestração de serviços e status do runtime. Conecte o painel a automações externas.',
     cta: 'Ver endpoints',
-    ctaHref: `http://${HOST}:3000/`,
+
     more: 'Swagger',
     moreRoute: '/api',
     art: 'warn',

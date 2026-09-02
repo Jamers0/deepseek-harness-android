@@ -16,13 +16,52 @@
  */
 
 import http from 'node:http'
+import crypto from 'node:crypto'
+import net from 'node:net'
 import os from 'node:os'
 import fs from 'node:fs'
 import { execSync, exec } from 'node:child_process'
 
 const PORT = Number(process.env.KERBERUS_API_PORT || 3000)
 const HOST = process.env.KERBERUS_API_HOST || '0.0.0.0'
+const API_TOKEN = process.env.KERBERUS_API_TOKEN || ''
 const START = Date.now()
+
+function hasBearer(req) {
+  if (!API_TOKEN) return false
+  const value = req.headers.authorization || ''
+  const supplied = value.startsWith('Bearer ') ? value.slice(7) : ''
+  if (!supplied || supplied.length !== API_TOKEN.length) return false
+  return crypto.timingSafeEqual(Buffer.from(supplied), Buffer.from(API_TOKEN))
+}
+
+function requireAdmin(req, res) {
+  if (!API_TOKEN) {
+    send(res, 503, { error: 'Admin API não configurada', code: 'AUTH_NOT_CONFIGURED' })
+    return false
+  }
+  if (!hasBearer(req)) {
+    send(res, 401, { error: 'Bearer token obrigatório', code: 'UNAUTHORIZED' })
+    return false
+  }
+  return true
+}
+
+const FILE_MESH_DEVICES = [
+  { id: 'aspire', name: 'Aspire', role: 'linux-host', status: 'not-tested' },
+  { id: 's21', name: 'S21', role: 'android-host', status: 'online' },
+  { id: 'motorola', name: 'Motorola', role: 'android-peer', status: 'not-tested' },
+]
+
+function fileMeshStatus() {
+  return {
+    status: 'partial',
+    reason: 'Protocolo e shares ainda dependem da auditoria dos três dispositivos; nenhum acesso é inventado.',
+    devices: FILE_MESH_DEVICES,
+    shares: [],
+    checkedAt: new Date().toISOString(),
+  }
+}
 
 /* ------------------------------------------------------------------ */
 /* Helpers de leitura de hardware (best-effort, sem root)             */
@@ -62,14 +101,37 @@ function readCpuTemp() {
 }
 
 function readBattery() {
-  // Sem root, /sys/.../power_supply/battery é negado. Tenta via Termux:API (não instalado),
-  // via dumpsys (sem root, geralmente negado) e devolve "unavailable" quando falha.
+  // Sem root, /sys/.../power_supply/battery é negado. Ordem de fontes:
+  //   1) termux-battery-status (Termux:API — instalado no S21, retorna JSON real)
+  //   2) sysfs capacity/status (quando acessível)
+  //   3) dumpsys battery (quando o Termux tem privilégio shell)
+  //   4) "unavailable"
+  try {
+    const out = execSync('termux-battery-status', { timeout: 3000 }).toString()
+    const j = JSON.parse(out)
+    if (j && j.percentage != null) {
+      return {
+        capacity: Number(j.percentage) ?? null,
+        status: j.status ? String(j.status).toLowerCase() : null,
+        temp: Number(j.temperature) || null,
+        voltage: Number(j.voltage) || null,
+        current: Number(j.current) || null,
+        plugged: j.plugged || null,
+        health: j.health || null,
+        source: 'termux-api',
+      }
+    }
+  } catch {
+    /* cai para sysfs */
+  }
+
   const cap = readFile('/sys/class/power_supply/battery/capacity')
   const status = readFile('/sys/class/power_supply/battery/status')
   if (cap) {
     return { capacity: Number(cap), status: status || 'unknown', temp: null, source: 'sysfs' }
   }
-  // fallback: dumpsys battery (funciona se o Termux tiver privilégio de shell adb)
+
+  // fallback: dumpsys battery
   try {
     const out = execSync('dumpsys battery', { timeout: 2000 }).toString()
     const m = (re) => {
@@ -145,36 +207,83 @@ function readCpuCount() {
 /* ------------------------------------------------------------------ */
 
 const SERVICES = [
-  { id: 'harness', title: 'DeepSeek Harness', port: 3080, desc: 'Motor de agentes de desenvolvimento' },
-  { id: 'api', title: 'Kerberus API', port: 3000, desc: 'API de orquestração de serviços' },
-  { id: 'dashboard', title: 'Dashboard', port: 3001, desc: 'Interface React (este painel)' },
-  { id: 'vscode', title: 'VS Code Server', port: 8080, desc: 'Editor remoto no proot Ubuntu' },
+  { id: 'harness', title: 'DeepSeek Harness', port: 3080, desc: 'Motor de agentes de desenvolvimento', host: 'motorola' },
+  { id: 'api', title: 'Kerberus API', port: 3000, desc: 'API de orquestração de serviços', host: 's21' },
+  { id: 'dashboard', title: 'Dashboard', port: 3001, desc: 'Interface React (este painel)', host: 's21' },
+  { id: 'vscode', title: 'VS Code Server', port: 8080, desc: 'Editor remoto no proot Ubuntu', host: 's21' },
+  { id: 'ssh', title: 'SSH (sshd Termux)', port: 8022, desc: 'Acesso remoto seguro', host: 's21' },
+  { id: 'tailscale', title: 'Tailscale Mesh', port: 22, desc: 'VPN mesh (par: Aspire 100.109.53.39)', host: 'mesh', peer: '100.109.53.39', peerPort: 22 },
 ]
 
-function checkPort(port, timeoutMs = 2000) {
+function checkPort(port, timeoutMs = 2000, host = '127.0.0.1') {
   return new Promise((resolve) => {
+    const started = Date.now()
     const net = http
     const req = net.get(
-      { host: '127.0.0.1', port, path: '/', timeout: timeoutMs },
+      { host, port, path: '/', timeout: timeoutMs },
       (res) => {
         res.resume()
-        resolve({ port, status: 'online', http: res.statusCode })
+        resolve({
+          port,
+          status: 'online',
+          http: res.statusCode,
+          latencyMs: Date.now() - started,
+          lastOk: Date.now(),
+        })
       },
     )
     req.on('timeout', () => {
       req.destroy()
-      resolve({ port, status: 'offline', http: null })
+      resolve({ port, status: 'offline', http: null, latencyMs: null, lastOk: null })
     })
-    req.on('error', () => resolve({ port, status: 'offline', http: null }))
+    req.on('error', () => resolve({ port, status: 'offline', http: null, latencyMs: null, lastOk: null }))
   })
 }
 
+// Ping TCP puro (para serviços que não falam HTTP, ex. sshd / mesh peer).
+function checkTcp(host, port, timeoutMs = 2000) {
+  return new Promise((resolve) => {
+    const started = Date.now()
+    const sock = net.connect({ host, port, timeout: timeoutMs })
+    sock.on('connect', () => {
+      const lat = Date.now() - started
+      sock.destroy()
+      resolve({ status: 'online', latencyMs: lat, lastOk: Date.now() })
+    })
+    sock.on('timeout', () => { sock.destroy(); resolve({ status: 'offline', latencyMs: null, lastOk: null }) })
+    sock.on('error', () => resolve({ status: 'offline', latencyMs: null, lastOk: null }))
+  })
+}
+
+// Memória de "último visto online" por porta (persiste entre polls).
+const lastSeen = new Map()
+
 async function readServices() {
   const results = await Promise.all(
-    SERVICES.map(async (s) => ({
-      ...s,
-      ...(await checkPort(s.port)),
-    })),
+    SERVICES.map(async (s) => {
+      let r
+      if (s.id === 'tailscale') {
+        // Mesh: verifica alcance do peer Aspire (sem porta HTTP local no Android).
+        const tcp = await checkTcp(s.peer, s.peerPort)
+        r = { port: s.peerPort, status: tcp.status, http: null, latencyMs: tcp.latencyMs, lastOk: tcp.lastOk }
+      } else if (s.id === 'ssh') {
+        // sshd: TCP puro (não responde a GET HTTP).
+        const tcp = await checkTcp('127.0.0.1', s.port)
+        r = { port: s.port, status: tcp.status, http: null, latencyMs: tcp.latencyMs, lastOk: tcp.lastOk }
+      } else {
+        r = await checkPort(s.port)
+      }
+
+      if (r.status === 'online') {
+        lastSeen.set(s.id, Date.now())
+        r.heartbeat = new Date().toISOString()
+      } else {
+        const prev = lastSeen.get(s.id)
+        r.lastOk = prev || null
+        r.heartbeat = prev ? new Date(prev).toISOString() : null
+      }
+      return { ...s, ...r }
+    }),
   )
   return results
 }
@@ -224,7 +333,20 @@ function collectMetrics() {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
-  const path = url.pathname.replace(/\/+$/, '') || '/'
+  const requestedPath = url.pathname.replace(/\/+$/, '') || '/'
+  const path = {
+    '/api': '/',
+    '/api/v1/status': '/health',
+    '/api/v1/runtime': '/metrics',
+    '/api/v1/services': '/services',
+    '/api/v1/hardware': '/hardware',
+    '/api/v1/health': '/health',
+    '/api/v1/files': '/files',
+    '/api/v1/files/devices': '/files/devices',
+    '/api/v1/files/shares': '/files/shares',
+    '/api/v1/files/status': '/files/status',
+    '/api/docs': '/docs',
+  }[requestedPath] || requestedPath
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -279,12 +401,29 @@ const server = http.createServer(async (req, res) => {
             { method: 'GET', path: '/metrics', desc: 'Métricas de hardware e recursos do host' },
             { method: 'GET', path: '/services', desc: 'Status ao vivo dos serviços Kerberus' },
             { method: 'GET', path: '/hardware', desc: 'Detalhe de hardware (temp, RAM, disco, bateria)' },
-            { method: 'POST', path: '/tasks', desc: 'Dispara tarefa assíncrona (placeholder do Harness)' },
+            { method: 'GET', path: '/api/v1/status', desc: 'Estado do Runtime' },
+            { method: 'GET', path: '/api/v1/runtime', desc: 'Métricas do Runtime' },
+            { method: 'GET', path: '/api/v1/services', desc: 'Serviços monitorados' },
+            { method: 'GET', path: '/api/v1/hardware', desc: 'Hardware do host' },
+            { method: 'GET', path: '/api/v1/files', desc: 'Estado do File Mesh (somente leitura)' },
+            { method: 'GET', path: '/api/v1/files/devices', desc: 'Dispositivos do File Mesh' },
+            { method: 'GET', path: '/api/v1/files/shares', desc: 'Shares conhecidos' },
+            { method: 'GET', path: '/api/v1/files/status', desc: 'Estado das ligações File Mesh' },
           ],
         })
       }
+      case '/files':
+      case '/files/devices':
+      case '/files/shares':
+      case '/files/status': {
+        const mesh = fileMeshStatus()
+        if (path === '/files/devices') return send(res, 200, { devices: mesh.devices, checkedAt: mesh.checkedAt })
+        if (path === '/files/shares') return send(res, 200, { shares: mesh.shares, checkedAt: mesh.checkedAt })
+        return send(res, 200, mesh)
+      }
       case '/tasks': {
         if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' })
+        if (!requireAdmin(req, res)) return
         let body = ''
         for await (const chunk of req) body += chunk
         let parsed = {}

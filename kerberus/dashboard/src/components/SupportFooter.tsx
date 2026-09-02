@@ -27,8 +27,8 @@ export default function SupportFooter({ onOpen }: Props) {
       <div className="mobile-callout">
         <h4>Versão móvel</h4>
         <p>
-          Este painel é responsivo: abra no celular pelo IP Tailscale do S21
-          (100.109.109.51:3001) e use o botão de tema ☀/☾ no topo para alternar
+          Este painel é responsivo: abra-o pelo endereço configurado do Kerberus
+          e use o botão de tema ☀/☾ no topo para alternar
           entre o modo escuro (preto) e o claro (branco).
         </p>
         <span className="mc-tag">Otimizado para Android</span>
